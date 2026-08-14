@@ -1,0 +1,40 @@
+# Keep the build context small and, more importantly, keep private content out
+# of an image that will sit on someone else's infrastructure.
+
+# The throwaway vault copy. It is a full clone of a real second brain — client
+# internals and proof numbers — and it must never be baked into a layer.
+testvault/
+vault/
+.cortex/
+
+node_modules/
+**/node_modules/
+**/.next/
+**/dist/
+**/.turbo/
+
+pipeline/.venv/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.ruff_cache/
+models/
+
+.git/
+.github/
+*.log
+.DS_Store
+.env
+.env.*
+
+# Generated per-machine, with an absolute `root:` pointing at THIS laptop. In a
+# container it resolves to a directory that does not exist, and CORTEX would
+# then ignore the vault it just cloned. The deployed instance uses
+# deploy/vault.adoption.cloud.yaml instead.
+vault.adoption.yaml
+
+# Docs are for the buyer, not the runtime.
+docs/
+**/docs/
+*.md
+!cortex.yaml

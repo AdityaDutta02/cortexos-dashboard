@@ -1,0 +1,123 @@
+# CORTEX — your configuration.
+#
+# Copy to <repoRoot>/cortex.yaml and edit. This is the only file you are expected
+# to change by hand, and most of it you will never touch.
+#
+# FOUR VALUES ARE LITERALS, NOT DEFAULTS. Change any of them and startup fails
+# with a message naming the rule. They are not preferences:
+#
+#   claude.auth              subscription        no API key, anywhere, ever
+#   claude.models.opus       user-invoked-only   the expensive model is never automatic
+#   ingest.keep_all          true                nothing is ever deleted
+#   processing.backlog.mode  on_demand           nothing spends without a decision
+#
+# Startup also REFUSES keys that were deleted in v2 — `schedule:`, `tasks:`,
+# `processing.curfew`, `claude.api_key`. Their presence means an older config got
+# restored, and that config would reintroduce unattended spend. Rejected, not
+# ignored.
+
+version: 2
+
+owner:
+  name: "YOUR NAME"
+  timezone: "Region/City"          # e.g. Europe/London, America/New_York
+
+claude:
+  auth: subscription               # literal. see header.
+  models:
+    attended: sonnet               # foreground work, extraction
+    light: haiku                   # classification, verification
+    opus: user-invoked-only        # literal. see header.
+
+processing:
+  # These stages never call a model. They are the reason search costs nothing:
+  # 100% of your vault is indexed and searchable without spending anything.
+  local_only: [convert, embed, cluster, index, graph]
+
+  backlog:
+    # `on_demand` = queued work waits for you to press something. Nothing runs
+    # unattended, so nothing spends while you are asleep.
+    #
+    # `background` runs bounded passes on a timer instead. It is a real choice,
+    # not a better one: it spends without a click. Switch deliberately, and watch
+    # the System screen for a week afterwards.
+    mode: on_demand
+    interval_minutes: 30           # only read when mode is `background`
+    chunk_minutes: 10              # one pass = one bounded batch
+    preflight_estimate: true       # show the cost before anything you press
+
+  trickle:
+    # Every request you make through the connector also clears a few units of
+    # queued backlog. Capped, shown in the run log, and switchable off — but it
+    # is the cheapest processing you will ever get, because the session is
+    # already open.
+    enabled: true
+    max_units_per_call: 3
+    show_in_run_log: true
+
+routines:
+  # Scheduled from your Claude account, on your allowance. Each `prompt` must
+  # match a job heading in your vault's Jobs.md — that file is the task list,
+  # this is only the clock.
+  #
+  # Until you have a cloud instance these will fire against a machine that may be
+  # asleep. That is expected, and it is why routines are proved in the cloud
+  # module and not the local one.
+  - { id: morning-brief, prompt: "Run my morning brief via CORTEX", budget: 1/day }
+  - { id: weekly-review, prompt: "Run my weekly review via CORTEX", budget: 1/week }
+
+ingest:
+  keep_all: true                   # literal. see header.
+  sources:
+    - { type: upload }             # drag onto the dashboard
+    - { type: folder, path: "./corpus" }
+
+graph:
+  # Below this confidence an extracted edge is written as `proposed::` and kept
+  # out of reasoning until you confirm it. Lower it and the graph fills with
+  # links you did not make; raise it and you confirm everything by hand.
+  confidence_gate: 0.7
+  verify: adversarial              # re-read the source span before asserting
+  cite_on_retrieval: true          # no citation → it says so, rather than guessing
+
+profile:
+  # What it takes for an observation about you to become something it acts on.
+  # Two distinct days matters more than three observations: three in one sitting
+  # is one mood, not a pattern.
+  graduation: { min_observations: 3, min_distinct_days: 2 }
+  demote_after_contradictions: 2
+  monthly_review: true
+
+serviceability:
+  beacon: { enabled: false, url: "" }    # metrics only, off by default
+  self_heal: true
+  template_version: "0.1.0"
+
+brand:
+  # Required, and may be left empty — the agent refuses to start if the block is
+  # missing entirely rather than silently running without it.
+  deck_template: ""
+  report_reference: ""
+  fonts: []
+  colors: {}
+
+skills:
+  # The three that ship. Add your own here once you have built them — a skill
+  # that exists on disk but is not listed here has no button.
+  enabled: [grill-me, meeting-to-actions, source-digest]
+
+# MCP servers CORTEX is allowed to call. This list is the WHOLE set — it is
+# passed explicitly with strict config on, so nothing is inherited from your own
+# Claude setup or from a .mcp.json lying around.
+#
+# EVERY SECRET IS A ${VAR} REFERENCE. Never an inline credential, not once, not
+# temporarily. An unset variable makes its server unreachable and names the
+# variable in the log — which is the correct failure. A committed credential is
+# not recoverable by rotating it later; assume anything committed is public.
+#
+# Empty by default, and that is a working configuration. Adding integrations is
+# per-stack work: each one needs its own credential, its own scopes and its own
+# testing.
+connectors: []
+
+extensions: []

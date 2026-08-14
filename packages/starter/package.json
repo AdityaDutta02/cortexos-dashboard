@@ -1,0 +1,8 @@
+{
+  "name": "cortex-starter",
+  "version": "0.1.0",
+  "description": "Starter config, three skills and three jobs. The shape to copy, not the answer to keep.",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": { "install-kit": "./install.sh" }
+}

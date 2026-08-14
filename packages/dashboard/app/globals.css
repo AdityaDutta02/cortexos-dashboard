@@ -1,0 +1,678 @@
+@import "tailwindcss";
+
+/* =================================================================
+   CORTEX design tokens.
+
+   Ported verbatim (light values) from the supermemory-clone reference
+   build — see its docs/research/DESIGN_TOKENS.md for provenance of every
+   hex. The dark ramp is derived here, because the reference is light-only.
+
+   RULES
+   1. Every colour is declared in @theme with its LIGHT value, so the
+      Tailwind utility exists and compiles to var(--color-*).
+   2. Dark values are re-declarations of the SAME token names. No colour is
+      ever defined only inside a media query.
+   3. Resolution order: OS preference applies only when the document has no
+      explicit data-theme; [data-theme="light"] and [data-theme="dark"] both
+      beat the OS. That is what lets the toggle win in both directions.
+   ================================================================= */
+
+@theme {
+  /* surfaces */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f4f8ff;
+  --color-paper: #fafafa;
+  --color-paper-blue: #f6f8fc;
+  --color-blue-paper: #f3f6fd;
+  --color-blue-tint: #eaf2ff;
+  --color-card-blue: #ddebff;
+  --color-panel: #fbfcfe;
+  --color-panel-border: #e4ecf9;
+  --color-strip: #fafafa;
+
+  /* brand — the single accent */
+  --color-blue: #0562ef;
+  --color-blue-light: #1e78ff;
+  --color-blue-hover: #3782f2;
+  --color-on-blue: #ffffff;
+
+  /* text */
+  --color-text: #0b1015;
+  --color-text-muted: #0b101599;
+  --color-text-dim: #888e94;
+
+  /* lines */
+  --color-border: #c5dbf2;
+  --color-border-light: #4794e04d;
+  --color-border-strong: #9bc1ea;
+  --color-border-dashed: #0b101529;
+  --color-grid: #0b101529;
+
+  /* status — health strip, run status, belief confidence */
+  --color-ok: #0a7d55;
+  --color-ok-tint: #e3f6ee;
+  --color-warn: #a15c07;
+  --color-warn-tint: #fdf0dc;
+  --color-danger: #b3261e;
+  --color-danger-tint: #fdeceb;
+  --color-neutral: #6b7280;
+  --color-neutral-tint: #f1f2f4;
+
+  /* type */
+  --font-heading: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-body: var(--font-dm-sans), "DM Sans", sans-serif;
+  --font-mono: var(--font-dm-mono), "DM Mono", monospace;
+
+  /* motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* layout */
+  --container-content: 1232px;
+  --shell-nav-w: 232px;
+  --shell-topbar-h: 56px;
+}
+
+/* Lets `dark:` variants work off the attribute rather than the media query,
+   so a component can opt into a dark-only tweak and still obey the toggle. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* -----------------------------------------------------------------
+   Dark ramp. Same token names, three places, identical values.
+   ----------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg: #06080c;
+    --color-bg-alt: #0a0e15;
+    --color-paper: #121823;
+    --color-paper-blue: #141c2a;
+    --color-blue-paper: #162033;
+    --color-blue-tint: #16263f;
+    --color-card-blue: #1c3a63;
+    --color-panel: #0c111a;
+    --color-panel-border: #202b3a;
+    --color-strip: #0c111a;
+
+    --color-blue: #4d9bff;
+    --color-blue-light: #7ab4ff;
+    --color-blue-hover: #6aa8ff;
+    --color-on-blue: #04101f;
+
+    --color-text: #f0f4fa;
+    --color-text-muted: #f0f4fac4;
+    --color-text-dim: #94a2b4;
+
+    --color-border: #2a3745;
+    --color-border-light: #4794e055;
+    --color-border-strong: #435568;
+    --color-border-dashed: #f0f4fa2e;
+    --color-grid: #f0f4fa1c;
+
+    --color-ok: #3ddc97;
+    --color-ok-tint: #0c2c22;
+    --color-warn: #ffc247;
+    --color-warn-tint: #31240a;
+    --color-danger: #ff6b6b;
+    --color-danger-tint: #341518;
+    --color-neutral: #9aa8ba;
+    --color-neutral-tint: #161d27;
+  }
+}
+
+[data-theme="dark"] {
+  --color-bg: #06080c;
+  --color-bg-alt: #0a0e15;
+  --color-paper: #121823;
+  --color-paper-blue: #141c2a;
+  --color-blue-paper: #162033;
+  --color-blue-tint: #16263f;
+  --color-card-blue: #1c3a63;
+  --color-panel: #0c111a;
+  --color-panel-border: #202b3a;
+  --color-strip: #0c111a;
+
+  --color-blue: #4d9bff;
+  --color-blue-light: #7ab4ff;
+  --color-blue-hover: #6aa8ff;
+  --color-on-blue: #04101f;
+
+  --color-text: #f0f4fa;
+  --color-text-muted: #f0f4fac4;
+  --color-text-dim: #94a2b4;
+
+  --color-border: #2a3745;
+  --color-border-light: #4794e055;
+  --color-border-strong: #435568;
+  --color-border-dashed: #f0f4fa2e;
+  --color-grid: #f0f4fa1c;
+
+  --color-ok: #3ddc97;
+  --color-ok-tint: #0c2c22;
+  --color-warn: #ffc247;
+  --color-warn-tint: #31240a;
+  --color-danger: #ff6b6b;
+  --color-danger-tint: #341518;
+  --color-neutral: #9aa8ba;
+  --color-neutral-tint: #161d27;
+}
+
+/* Explicit light, so the toggle beats a dark OS preference. */
+[data-theme="light"] {
+  --color-bg: #ffffff;
+  --color-bg-alt: #f4f8ff;
+  --color-paper: #fafafa;
+  --color-paper-blue: #f6f8fc;
+  --color-blue-paper: #f3f6fd;
+  --color-blue-tint: #eaf2ff;
+  --color-card-blue: #ddebff;
+  --color-panel: #fbfcfe;
+  --color-panel-border: #e4ecf9;
+  --color-strip: #fafafa;
+
+  --color-blue: #0562ef;
+  --color-blue-light: #1e78ff;
+  --color-blue-hover: #3782f2;
+  --color-on-blue: #ffffff;
+
+  --color-text: #0b1015;
+  --color-text-muted: #0b101599;
+  --color-text-dim: #888e94;
+
+  --color-border: #c5dbf2;
+  --color-border-light: #4794e04d;
+  --color-border-strong: #9bc1ea;
+  --color-border-dashed: #0b101529;
+  --color-grid: #0b101529;
+
+  --color-ok: #0a7d55;
+  --color-ok-tint: #e3f6ee;
+  --color-warn: #a15c07;
+  --color-warn-tint: #fdf0dc;
+  --color-danger: #b3261e;
+  --color-danger-tint: #fdeceb;
+  --color-neutral: #6b7280;
+  --color-neutral-tint: #f1f2f4;
+}
+
+/* -----------------------------------------------------------------
+   Base
+   ----------------------------------------------------------------- */
+html {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    color-scheme: dark;
+  }
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+/*
+   THE APP SHELL NEVER SCROLLS — and the fix is `.scroll-region`, below.
+   ---------------------------------------------------------------------
+   A tall note inside the side panel's `overflow-y:auto` container made
+   `documentElement.scrollHeight` 4826 against a 900px viewport: the whole
+   100vh shell could be dragged upward, leaving a screen of dead white below it
+   and a third scrollbar beside the two legitimate ones (found live,
+   2026-08-11). `overflow: hidden` on the shell div did not stop it —
+   `window.scrollTo(0, 800)` still moved the page.
+
+   The cause is that a **statically positioned** scroll container lets its
+   descendants' layout overflow reach the initial containing block. Measured:
+   adding `position: relative` to that one container took
+   `documentElement.scrollHeight` from 4826 back to 900.
+
+   So the fix belongs on the scroll regions, not on `body`. `body {
+   overflow: hidden }` was tried and rejected: it is a blunt instrument that
+   also breaks `/styleguide` and `/sign-in`, which are documents and are
+   supposed to scroll.
+*/
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+   Every scrolling region in the app carries this.
+
+   `position: relative` is the load-bearing part — see the note above. It costs
+   nothing: the absolutely-positioned things inside these regions (list markers,
+   meter fills) all set their own `relative` wrapper or use their static
+   position, so re-parenting the containing block moves none of them.
+
+   `overscroll-behavior: contain` is the second half of the same bug: without
+   it, a flick that runs past the end of a panel chains outward and drags
+   whatever is behind it.
+*/
+.scroll-region {
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Headings carry unusually tight negative tracking — signature of the look. */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+/* One focus ring for the whole app. Visible, never removed. */
+:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+/* -----------------------------------------------------------------
+   Shared utilities carried over from the reference
+   ----------------------------------------------------------------- */
+
+
+/* -----------------------------------------------------------------
+   TYPE SCALE — lifted from the measured supermemory values
+   (docs/research/DESIGN_TOKENS.md + the live page's own utilities).
+
+   The governing rule: 11px mono is for LABELS ONLY. Anything a person
+   actually reads starts at 13px, and the default for a content row is 15px.
+   Density is not worth an unreadable dashboard.
+   ----------------------------------------------------------------- */
+
+/* 32/34/-1.2 — the one big number in a module (backlog depth). */
+.t-metric {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 32px;
+  line-height: 34px;
+  letter-spacing: -1.2px;
+}
+
+/* 22/28.6/-0.66 — side-panel titles. Reference "card title". */
+.t-title {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 28.6px;
+  letter-spacing: -0.66px;
+}
+
+/* 18/26/-0.36 — sub-headings inside the side panel. */
+.t-subtitle {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 26px;
+  letter-spacing: -0.36px;
+}
+
+/* 16/26.4/-0.08 — long-form prose. Reference body. */
+.t-body-lg {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 26.4px;
+  letter-spacing: -0.08px;
+}
+
+/* 15/24/-0.18 — THE DEFAULT. Every primary row in every rail module. */
+.t-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 24px;
+  letter-spacing: -0.18px;
+}
+
+/* 14/21/-0.07 — secondary rows. */
+.t-body-sm {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 21px;
+  letter-spacing: -0.07px;
+}
+
+/* 13/19.5 — the smallest size any prose is allowed to be. */
+.t-caption {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 19.5px;
+}
+
+/* 12/16 — mono metadata: counts, times, paths. Readable, not decorative. */
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* 13/18 — mono that carries content, e.g. a file path in a panel header. */
+.t-mono-lg {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+/* Prose line length. ~72ch at 16px — the reference caps its columns at 860px. */
+.measure {
+  max-width: 68ch;
+}
+
+/* Vertical gutter rules framing a content column. */
+.container-edge {
+  position: relative;
+}
+.container-edge::before,
+.container-edge::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-border);
+  pointer-events: none;
+}
+.container-edge::before {
+  left: 0;
+}
+.container-edge::after {
+  right: 0;
+}
+
+/* Uppercase mono eyebrow label: 11px / 16.5px / 1.54px tracking / 500. */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16.5px;
+  font-weight: 500;
+  letter-spacing: 1.54px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Module headers sit a step up from the marketing eyebrow so a rail label
+   reads as a heading rather than as fine print. */
+.eyebrow-lg {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Dashed grid overlay used behind panel headers and empty states. */
+.grid-overlay {
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* Attention ring on a graph node that needs a decision. */
+@keyframes pulse-ring {
+  0% { r: var(--pulse-from); opacity: 0.55; }
+  70% { r: var(--pulse-to); opacity: 0; }
+  100% { r: var(--pulse-to); opacity: 0; }
+}
+
+.pulse-ring {
+  animation: pulse-ring 2.4s var(--ease-out-expo) infinite;
+}
+
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s var(--ease-out-expo) both;
+}
+
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-paper) 0%,
+    var(--color-blue-tint) 50%,
+    var(--color-paper) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+.progress-indeterminate {
+  animation: indeterminate 1.2s var(--ease-out-strong) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .skeleton-shimmer,
+  .progress-indeterminate,
+  .pulse-ring {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Syntax highlighting for fenced code in notes.
+
+   rehype-highlight (lowlight/highlight.js) emits `.hljs-*` class names and
+   ships its own stylesheets, all of which hardcode a palette. These map the
+   handful of token classes that actually occur to the design tokens instead,
+   so code follows the theme in both light and dark rather than dragging a
+   third colour scheme into the page.
+   --------------------------------------------------------------------------- */
+.hljs-comment,
+.hljs-quote {
+  color: var(--color-text-dim);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type,
+.hljs-meta {
+  color: var(--color-blue);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition {
+  color: var(--color-ok);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--color-warn);
+}
+.hljs-title,
+.hljs-name,
+.hljs-section,
+.hljs-built_in,
+.hljs-attr,
+.hljs-attribute {
+  color: var(--color-text);
+  font-weight: 500;
+}
+.hljs-variable,
+.hljs-template-variable,
+.hljs-deletion {
+  color: var(--color-danger);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 500;
+}
+
+/* ---- Phone ---------------------------------------------------------------
+   `viewportFit: "cover"` in layout.tsx lets the page paint edge to edge, under
+   the notch and the home indicator. These insets are what stop real content
+   from landing there. Zero on every device without a cutout, so this costs
+   nothing on a laptop.
+
+   Applied to the shell rather than to `body`: `body` is the scroll container
+   and padding it would offset the fixed panels too. */
+.app-shell {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* iOS zooms the whole page when a focused input's font-size is under 16px —
+   and then does not zoom back out. Every text input in the app is smaller than
+   that by design, so the rule is: keep the type scale on a laptop, and hold the
+   line at 16px on touch screens, where the zoom is the worse of the two evils.
+
+   `pointer: coarse` rather than a width breakpoint: the trigger is the input
+   method, not the screen size. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/*
+   CLIENT REPORT SCREEN — the Figma design's own scale.
+   ---------------------------------------------------------------------
+   The report screen is an editorial layout, not a dashboard: a full-bleed
+   navy hero, a hero figure at 82px, and a display scale the app's `t-*` set
+   deliberately does not carry (its largest is `t-metric` at 32px, sized for a
+   200px module). These live here rather than in `t-*` so the app's own scale
+   stays the scale of the app.
+
+   The navy band is fixed in BOTH themes. It is ink on a printed report, not a
+   surface — inverting it in dark mode would turn the one deliberate block of
+   colour into whatever the theme happened to pick. Everything else on the
+   screen uses the app's adaptive tokens (`bg-bg`, `text-text`, `border-border`)
+   and follows the theme normally.
+*/
+@theme {
+  --color-navy: #001745;
+  --color-navy-rule: #2a4472;
+  --color-navy-label: #8fb2ee;
+  --color-blue-soft: #5c9bff;
+  --color-blue-pale: #a9caff;
+}
+
+/* Hero figure — single-line numerals only, so the tight leading is wrap-safe. */
+@utility text-hero-figure {
+  font-family: var(--font-heading);
+  font-size: 82px;
+  line-height: 0.92;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-hero-figure-sm {
+  font-family: var(--font-heading);
+  font-size: 54px;
+  line-height: 0.94;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-figure {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-pull-figure {
+  font-family: var(--font-heading);
+  font-size: 40px;
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 18px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+   The four text roles the design file expected from its design-system package,
+   which is not published anywhere we can install. Values are taken from the
+   design's own usage, and deliberately sit on the same families and tracking
+   as the `t-*` scale so the two do not read as different products.
+*/
+@utility text-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility text-heading-sm {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+@utility text-card-title {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+@utility text-button {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: -0.07px;
+}

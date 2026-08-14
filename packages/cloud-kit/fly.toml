@@ -1,0 +1,94 @@
+# CORTEX on Fly — one machine, one volume, one public port.
+#
+# §2.5 sizes a `web` at 1GB and a `worker` at 4GB. That split is a DFY shape and
+# it does not survive contact with a single-user instance: a Fly volume attaches
+# to exactly one machine, and both processes need the same vault on the same
+# disk. Splitting them would mean either two copies of the vault (two writers —
+# forbidden) or a network filesystem between them (a new failure mode for no
+# gain). So: one 4GB machine that runs both, sized by the worker, which is the
+# side that actually needs the memory.
+#
+# `auto_stop_machines` is off on purpose. A stopped machine is not reachable,
+# and Anthropic's cloud connects *inbound* to the MCP endpoint — a machine that
+# suspends to save money is a phone that silently stops working.
+
+# YOUR app name goes here, and `fly launch` will have already claimed one for
+# you — put that exact string in. Plain `cortex` is taken globally.
+#
+# Get this wrong and nothing errors: every command you then run with an explicit
+# `-a <real-app>` works fine, so `fly deploy` with no flag silently targets an
+# app that does not exist and `fly status` reports on a machine you are not
+# looking at. Make this line match reality before your first deploy.
+app = "CHANGE-ME"
+# YOUR region. Pick the one nearest the people using it, then check that Fly
+# actually has VOLUME capacity there — the nearest region is frequently not
+# available, and the failure reads "app is already using all available zones in
+# region <x>" on a brand-new app with zero volumes.
+#
+# A machine must live in its volume's region, so the volume decides this, not
+# preference. Region also moves your latency and your bill. Changing it later is
+# a volume move, not a rebuild.
+primary_region = "CHANGE-ME"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  CORTEX_MCP_TRANSPORT = "http"
+  CORTEX_WEB_ORIGIN = "http://127.0.0.1:3000"
+  CORTEX_VAULT_ROOT = "/data/vault"
+  # Committed and cloud-specific, because the LOCAL vault.adoption.yaml points at
+  # a path on your laptop that does not exist in a container. Copy
+  # vault.adoption.cloud.example.yaml to vault.adoption.cloud.yaml, set `root` to
+  # /data/vault, and commit that one.
+  CORTEX_VAULT_CONFIG = "/app/vault.adoption.cloud.yaml"
+  CORTEX_STATE_DIR = "/data/pipeline"
+  CORTEX_STATE_DB = "/data/cortex.db"
+  CORTEX_GIT_PUSH = "true"
+  CORTEX_GIT_BRANCH = "main"
+  CORTEX_INSTANCE_ID = "cortex-cloud"
+  CORTEX_LOG_LEVEL = "info"
+  # `project` only. `user` would pull the owner's entire personal Claude context
+  # into every run — see CORTEX_CLAUDE_SETTING_SOURCES in env.ts.
+  CORTEX_CLAUDE_SETTING_SOURCES = "project"
+
+# Secrets, set with `fly secrets set` and never written here:
+#   CORTEX_ACCESS_PASSWORD   dashboard password
+#   CORTEX_VAULT_REPO        https remote of the vault
+#   CORTEX_GIT_TOKEN         fine-grained PAT, contents:read+write on that repo only
+#   CLAUDE_CODE_OAUTH_TOKEN  from `claude setup-token` — subscription, not an API key
+
+[[mounts]]
+  source = "cortex_data"
+  destination = "/data"
+  # The vault is ~250MB today. 10GB leaves room for the index, the converted
+  # cache and years of growth without a resize.
+  initial_size = "10gb"
+
+[http_service]
+  internal_port = 8787          # the agent, which fronts both surfaces
+  force_https = true
+  auto_stop_machines = false    # see the header — a suspended machine is an unreachable connector
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 40
+    hard_limit = 80
+
+  [[http_service.checks]]
+    # `/health/live`, NOT `/health`. The latter shells out to the Python
+    # pipeline, which takes seconds while a rebuild holds the CPU — so probing
+    # it makes a long `index rebuild` fail the check and pull the only machine
+    # out of rotation. The site then 503s because it is indexing. Seen live on
+    # the first cloud rebuild.
+    grace_period = "60s"        # the vault clone happens before the agent listens
+    interval = "30s"
+    method = "GET"
+    timeout = "10s"
+    path = "/health/live"
+
+[[vm]]
+  size = "performance-2x"
+  memory = "4gb"

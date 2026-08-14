@@ -1,0 +1,10 @@
+{
+  "name": "cortex-cloud-kit",
+  "version": "0.1.0",
+  "description": "The cloud build files, as a copy-in kit. Adds a cloud target to a working local CORTEX without touching it.",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "install-kit": "./install.sh"
+  }
+}

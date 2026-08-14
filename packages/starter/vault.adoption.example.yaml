@@ -1,0 +1,83 @@
+# CORTEX vault adoption profile — copy to <repoRoot>/vault.adoption.yaml
+#
+# Phase 1 points CORTEX at a second brain that ALREADY EXISTS (spec §16.2).
+# This file is the mapping between CORTEX's logical layout and yours.
+#
+# It maps. It does not migrate. Nothing here renames a folder, rewrites a note
+# or moves a file. If a role has no folder, CORTEX simply does not write there.
+#
+# Generate a draft with:  POST /api/vault/adopt   (or the Settings screen)
+# Then read `00 Maps/CORTEX Adoption Report.md`, correct anything wrong here,
+# and run adoption again.
+#
+# Point this at your real vault. Nothing is copied or duplicated — CORTEX reads
+# the folder you already write in, in place.
+
+# Absolute path to your vault root. Read and written in place; never moved.
+root: "/Users/you/Documents/MyVault"
+label: "Second Brain"
+
+# Logical role -> your real folder name, exactly as it appears on disk.
+# Spaces, Title Case and number prefixes are all fine. Omit what you do not have.
+folders:
+  maps: "00 Maps"
+  projects: "10 Projects"
+  areas: "20 Areas"
+  resources: "30 Resources"
+  archive: "40 Archive"
+  # Decision Ledger, Content Bets, Contradiction Register — the *why* behind
+  # judgement calls, and the register spec §6 reasons over. Map this if you
+  # keep one; it is the densest CORTEX-relevant content in a mature vault.
+  ledgers: "50 Ledgers"
+  # Shipped content and its performance record.
+  posts: "60 Posts"
+  inbox: "_Inbox"
+  insights: "Insights"
+  sources: "Sources"
+  templates: "99 Templates"
+  # outputs:  omitted — deliverables land in a literal `outputs/` folder
+  # profile:  omitted — belief rows land in a literal `00-maps/profile/` folder
+
+# Directories CORTEX must never read or index.
+ignore:
+  - ".git"
+  - ".obsidian"
+  - "_ClaudeMemory"
+  - "_BufferSync"
+
+# How your graph names a node.
+#   basename  your links are [[Wikilinks]] that resolve by filename (Obsidian)
+#   path      nodes are vault-relative paths (the CORTEX template default)
+nodeIds: basename
+
+# Where your typed edges live, and how they are written.
+edgeHeading: "## Edges"
+edgeSyntax: dataview-inline # `- relation:: [[Target]]`
+
+# Your edge taxonomy. Unlisted relations pass through unchanged — CORTEX does
+# not rename your edges or force them into the template's vocabulary.
+#   from:    the relation as it appears in your notes
+#   to:      (optional) the template relation it means
+#   inverse: (optional) the reciprocal you write on the other node
+relations:
+  - { from: part-of, inverse: has-part }
+  - { from: instance-of, inverse: has-instance }
+  - { from: proves, inverse: proven-by }
+  - { from: feeds, inverse: fed-by }
+  - { from: depends-on, inverse: required-by }
+  - { from: uses, inverse: used-by }
+  - { from: refines, inverse: refined-by }
+  - { from: applies, inverse: applied-in }
+  - { from: enables, inverse: enabled-by }
+  - { from: produces, inverse: produced-by }
+  - { from: informs, inverse: informed-by }
+  - { from: special-case-of, inverse: generalizes }
+  - { from: derived-from, inverse: derives }
+  # `relates-to` and `sibling-of` are symmetric; leave them unmapped.
+
+# Your frontmatter keys, mapped to the fields CORTEX means.
+frontmatter:
+  title: title
+  updatedAt: updated
+  tags: tags
+  tier: tier

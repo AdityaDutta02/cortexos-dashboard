@@ -1,0 +1,11 @@
+{
+  "name": "cortex",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm --filter cortexos-dashboard dev",
+    "build": "pnpm --filter cortexos-dashboard build",
+    "typecheck": "pnpm --filter cortexos-dashboard typecheck"
+  }
+}
