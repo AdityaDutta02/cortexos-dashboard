@@ -20,7 +20,7 @@ version: 2
 
 owner:
   name: "YOUR NAME"
-  timezone: "Region/City"          # e.g. Europe/London, America/New_York
+  timezone: "UTC"                  # change to yours, e.g. Asia/Kolkata, Europe/London
 
 claude:
   auth: subscription               # literal. see header.
