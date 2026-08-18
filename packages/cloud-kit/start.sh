@@ -34,8 +34,12 @@ echo "starting dashboard on :${WEB_PORT}"
 PORT="${WEB_PORT}" HOSTNAME=127.0.0.1 node /app/web/packages/dashboard/server.js &
 web_pid=$!
 
+# The agent is installed from npm, so it lives inside its own node_modules tree
+# rather than at /app/agent/dist. Overridable, but the default is the layout the
+# Dockerfile actually produces — a hardcoded path here is a container that boots,
+# serves the dashboard, and has no agent behind it.
 echo "starting agent on :${CORTEX_PORT}"
-node /app/agent/dist/index.js &
+node "${CORTEX_AGENT_ENTRY:-/app/agent/node_modules/cortexos-agent/dist/index.js}" &
 agent_pid=$!
 
 # Exit as soon as either child exits, carrying its status out.
