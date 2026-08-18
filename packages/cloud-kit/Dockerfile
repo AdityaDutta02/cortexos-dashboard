@@ -127,6 +127,24 @@ RUN /opt/venv/bin/cortex-engine --help > /dev/null 2>&1 \
  && test -f /opt/cortex/models/bge-small-en-v1.5/model.onnx \
  && test -f /app/agent/node_modules/cortexos-agent/dist/index.js
 
+# SKILLS SHIP IN THE IMAGE.
+#
+# Only `<repoRoot>/.claude/skills` is loadable: DiscoveryService grades a skill
+# by where it was found, and the SDK runs with cwd=repoRoot and
+# settingSources=["project"]. Skills anywhere else are listed, labelled, and get
+# no button — `invocableSkills: 0` on a machine that otherwise looks healthy.
+#
+# The starter skills are copied straight from the kit rather than from
+# `.claude/`, because a COPY of a directory that may not exist fails the build
+# for anyone who deploys before running the starter installer. Anything you add
+# later goes in `packages/starter/skills/` and ships the same way.
+#
+# The alternative — CORTEX_SKILLS_REPO, a second private repo with its own token
+# — still works and takes precedence at boot. It exists for people running many
+# more skills than a course buyer has.
+COPY packages/starter/skills/ ./.claude/skills/
+RUN test -f /app/.claude/skills/grill-me/SKILL.md
+
 COPY cortex.yaml ./cortex.yaml
 # The cloud vault profile. The local `vault.adoption.yaml` is dockerignored on
 # purpose — it points at a path on somebody's laptop. If the build fails here,
