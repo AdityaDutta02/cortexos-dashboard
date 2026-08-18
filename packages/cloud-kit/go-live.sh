@@ -14,8 +14,13 @@
 #   * The region must have VOLUME capacity, which you cannot know in advance.
 #     So we try, read the failure, and move to the next region automatically.
 #   * vault.adoption.cloud.yaml needs no edits at all, but it does need to be
-#     copied and COMMITTED — the container builds from the repo, so anything
-#     uncommitted does not exist as far as the cloud is concerned.
+#     in place before the build: the Dockerfile COPYs it from the build context,
+#     and a missing one fails the build with a line nobody can act on.
+#
+# It does NOT commit anything. fly.toml, cortex.yaml and both adoption profiles
+# are gitignored on purpose — they carry a vault path, a name and a timezone, so
+# they are per-person by definition. `fly deploy` uploads the local directory as
+# its build context, so the files being present locally is the whole requirement.
 #
 #   usage:  packages/cloud-kit/go-live.sh [--region xxx] [--dry-run]
 #
@@ -64,11 +69,6 @@ ok "logged in as $(fly auth whoami 2>/dev/null)"
         packages/cloud-kit/install.sh"
 ok "cloud kit is in place"
 
-git -C "$REPO_ROOT" rev-parse --git-dir >/dev/null 2>&1 \
-  || die "This folder is not a git repository, and your cloud machine builds
-        itself from one. Run:  git init && git add -A && git commit -m 'initial'"
-ok "git repository found"
-
 # ── 2. Claim an app name ────────────────────────────────────────────────────
 # `--generate-name` rather than asking the user to invent one: app names are
 # globally unique across every Fly customer, so a chosen name is mostly a
@@ -85,9 +85,21 @@ elif [[ $DRY_RUN -eq 1 ]]; then
   APP="dry-run-app-name"
   info "would run: fly apps create --generate-name"
 else
-  APP="$(fly apps create --generate-name --json 2>/dev/null | sed -E 's/.*"[Nn]ame" *: *"([^"]+)".*/\1/')"
-  [[ -n "$APP" ]] || die "Could not create an app. Run 'fly apps create --generate-name' on
-        its own to see what Fly said."
+  # `--json` returns the entire app object, not a name. Parsed properly rather
+  # than by regex: a sloppy match here puts a JSON blob into fly.toml and every
+  # later command fails somewhere far away from the cause.
+  CREATE_OUT="$(fly apps create --generate-name --json 2>&1)" || true
+  APP="$(printf '%s' "$CREATE_OUT" | python3 -c '
+import json, sys
+raw = sys.stdin.read()
+start = raw.find("{")
+try:
+    print(json.loads(raw[start:]).get("ID", "") if start >= 0 else "")
+except Exception:
+    print("")
+' 2>/dev/null)"
+  [[ -n "$APP" && "$APP" != "null" ]] || die "Could not create an app. Fly said:
+${CREATE_OUT}"
   ok "created: ${APP}"
 fi
 
@@ -123,14 +135,25 @@ elif [[ $DRY_RUN -eq 1 ]]; then
   VOLUME_REGION="${REGIONS[0]}"
   info "would try regions: ${REGIONS[*]}"
 else
+  # Only a capacity refusal is worth retrying elsewhere. Treating EVERY failure
+  # as "region full" is how a bad app name or an expired login gets reported as
+  # a Fly outage, sending someone away to wait an hour for a problem that is
+  # sitting in front of them.
+  VOL_ERR=""
   for region in "${REGIONS[@]}"; do
     info "trying ${region}"
-    if fly volumes create cortex_data --size 10 --region "$region" -a "$APP" --yes >/dev/null 2>&1; then
+    if VOL_ERR="$(fly volumes create cortex_data --size 10 --region "$region" -a "$APP" --yes 2>&1)"; then
       VOLUME_REGION="$region"
       ok "disk created in ${region}"
       break
     fi
-    info "${region} has no capacity right now — trying the next one"
+    if printf '%s' "$VOL_ERR" | grep -qiE 'zones|capacity|no capacity|not available'; then
+      info "${region} has no capacity right now — trying the next one"
+      continue
+    fi
+    die "Creating the disk failed, and not because the region was full. Fly said:
+
+${VOL_ERR}"
   done
   [[ -n "$VOLUME_REGION" ]] || die "Every region we tried is full. This is temporary and not your fault.
         Wait an hour and run this again, or pick one yourself:
@@ -155,24 +178,7 @@ else
   ok "copied (nothing in it needs changing)"
 fi
 
-# ── 6. Commit ───────────────────────────────────────────────────────────────
-# The container builds from the repo. Uncommitted config is invisible to it, and
-# that failure looks like a healthy machine serving an empty vault.
-say "Committing your cloud config"
-
-if [[ $DRY_RUN -eq 1 ]]; then
-  info "would commit fly.toml and vault.adoption.cloud.yaml"
-else
-  git -C "$REPO_ROOT" add fly.toml vault.adoption.cloud.yaml Dockerfile .dockerignore docker/start.sh 2>/dev/null || true
-  if git -C "$REPO_ROOT" diff --cached --quiet; then
-    ok "nothing new to commit"
-  else
-    git -C "$REPO_ROOT" commit -q -m "cloud config for ${APP}"
-    ok "committed"
-  fi
-fi
-
-# ── 7. What is left, which is only the secrets ──────────────────────────────
+# ── 6. What is left, which is only the secrets ──────────────────────────────
 say "Done. One step left — your four secrets."
 
 cat <<TEXT
