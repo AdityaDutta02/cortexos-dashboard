@@ -5,8 +5,9 @@
 # to exactly one machine, and both processes need the same vault on the same
 # disk. Splitting them would mean either two copies of the vault (two writers —
 # forbidden) or a network filesystem between them (a new failure mode for no
-# gain). So: one 4GB machine that runs both, sized by the worker, which is the
-# side that actually needs the memory.
+# gain). So: one machine that runs both, sized by the worker, which is the side
+# that actually needs the memory — see the [[vm]] block for what that measured
+# out to.
 #
 # `auto_stop_machines` is off on purpose. A stopped machine is not reachable,
 # and Anthropic's cloud connects *inbound* to the MCP endpoint — a machine that
@@ -89,6 +90,16 @@ primary_region = "CHANGE-ME"
     timeout = "10s"
     path = "/health/live"
 
+# SIZED FROM MEASUREMENT, NOT FROM CAUTION.
+#
+# A full index rebuild of a 594-file / 2284-chunk vault peaked at 741MB RSS
+# (measured 2026-08-17). This was `performance-2x` / 4gb, which is ~5x that and
+# ~$64/month always-on — the single biggest line item in running CORTEX, for
+# headroom nothing has ever used.
+#
+# shared-cpu-2x / 2gb is ~$11/month and still 2.7x the measured peak. If you
+# ingest very large media constantly and see OOM restarts in `fly logs`, step up
+# to 4gb — that is a one-line change and a redeploy, not a migration.
 [[vm]]
-  size = "performance-2x"
-  memory = "4gb"
+  size = "shared-cpu-2x"
+  memory = "2gb"
