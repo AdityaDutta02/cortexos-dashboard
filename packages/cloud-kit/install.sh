@@ -62,11 +62,8 @@ done
 echo
 echo "cloud kit: ${copied} copied, ${skipped} skipped"
 echo
-echo "Before you deploy, three of these need YOUR values — none has a default"
-echo "that is right for you, and each fails differently if it is wrong:"
+echo "Next: one command does the rest of the configuration for you —"
+echo "app name, region, disk, the cloud vault profile, and the commit:"
 echo
-echo "  fly.toml            app        = the name fly launch actually claimed"
-echo "  fly.toml            primary_region = a region with VOLUME capacity"
-echo "  vault.adoption.cloud.yaml      copy the .example, keep root: /data/vault"
+echo "  packages/cloud-kit/go-live.sh"
 echo
-echo "Then: fly secrets set ...   (see fly.toml for the list) — before the first deploy."
